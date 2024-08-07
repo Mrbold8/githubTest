@@ -14,17 +14,15 @@ spec:
         server:
           ha:
             enabled: true
-	    replicas: 2
-	    raft:
-	      enabled: true
-	      setNodeId: true
-
-	      config |
-	        cluster_name = "vault-integrated-storage"
-		storage "raft" {
-		  path = "/vault/data"
-		}
             replicas: 2
+            raft:
+              enabled: true
+              setNodeId: true
+              config: |
+                cluster_name = "vault-integrated-storage"
+                storage "raft" {
+                  path = "/vault/data"
+                }
           dataStorage:
             enabled: true
             storageClass: "standard"
