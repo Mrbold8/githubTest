@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault-secrets-webhook
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: oci://ghcr.io/bank-vaults/helm-charts
+    chart: vault-secrets-webhook
+    targetRevision: 1.24.0 # Replace with the desired version
+    helm:
+      values: |
+        env:
+          VAULT_ADDR: "https://vault.vault.svc.cluster.local:8200"
+        affinity: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vault-infra
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
