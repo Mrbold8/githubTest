@@ -19,27 +19,26 @@ spec:
               enabled: true
               setNodeId: true
               config: |
-		ui = true
+                ui = true
                 cluster_name = "vault-integrated-storage"
+                
                 storage "raft" {
                   path = "/vault/data"
+                  retry_join {
+                    leader_api_addr = "http://vault-0.vault-internal:8200"
+                  }
+                  retry_join {
+                    leader_api_addr = "http://vault-1.vault-internal:8200"
+                  }
                 }
 
-	      listener "tcp" {
-	        address = "0.0.0.0:8200"
-		cluster_address = "0.0.0.0:8201"
-		tls_disable = "true"
-	      }
-	      storage "raft" {
-	        path = "/vault/data"
-	        retry_join {
-	          leader_api_addr = "http://vault-0:8200"
-	        }
-	        retry_join {
-	          leader_api_addr = "http://vault-1:8200"
-	        }
-	      }
-	      disable_mlock = true
+                listener "tcp" {
+                  address = "0.0.0.0:8200"
+                  cluster_address = "0.0.0.0:8201"
+                  tls_disable = "true"
+                }
+     
+                disable_mlock = true
 
           dataStorage:
             enabled: true
@@ -53,13 +52,3 @@ spec:
               memory: "512Mi"
               cpu: "250m"
           affinity: {}
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: vault
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
-
