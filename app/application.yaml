@@ -54,10 +54,3 @@ spec:
     syncOptions:
     - CreateNamespace=true
 
-  hooks:
-    - name: install-vault-secrets-webhook
-      type: PreSync
-      command: ["sh", "-c"]
-      args:
-        - helm upgrade --install --wait vault-secrets-webhook oci://ghcr.io/bank-vaults/helm-charts/vault-secrets-webhook --namespace vault-infra --version 1.24.0
-
