@@ -44,15 +44,6 @@ spec:
                 cpu: "250m"
             affinity: {}
 
-    - repoURL: https://charts.banzaicloud.com
-      chart: vault-secrets-webhook
-      targetRevision: 1.24.0 # Replace with the desired version
-      helm:
-        values: |
-          env:
-            VAULT_ADDR: "https://vault.vault.svc.cluster.local:8200"
-          affinity: {}
-
   destination:
     server: https://kubernetes.default.svc
     namespace: vault
@@ -62,4 +53,11 @@ spec:
       selfHeal: true
     syncOptions:
     - CreateNamespace=true
+
+  hooks:
+    - name: install-vault-secrets-webhook
+      type: PreSync
+      command: ["sh", "-c"]
+      args:
+        - helm upgrade --install --wait vault-secrets-webhook oci://ghcr.io/bank-vaults/helm-charts/vault-secrets-webhook --namespace vault-infra --version 1.24.0
 
