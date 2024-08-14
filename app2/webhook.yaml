@@ -1,27 +1,57 @@
 apiVersion: apps/v1
-    kind: Deployment
+kind: Deployment
+metadata:
+  name: nginx-secret-display
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+  template:
     metadata:
-      name: webhook
+      labels:
+        app.kubernetes.io/name: vault
+      annotations:
+        vault.security.banzaicloud.io/vault-addr: "http://vault.vault:8200"
+        vault.security.banzaicloud.io/vault-role: "webapp"
+        vault.security.banzaicloud.io/vault-skip-verify: "true"
+        vault.security.banzaicloud.io/vault-path: "kubernetes"
     spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          app.kubernetes.io/name: vault
-      template:
-        metadata:
-          labels:
-            app.kubernetes.io/name: vault
-          annotations:
-            vault.security.banzaicloud.io/vault-addr: "https://vault:8200" # optional, the address of the Vault service, default values is https://vault:8200
-            vault.security.banzaicloud.io/vault-role: "webapp" # optional, the default value is the name of the ServiceAccount the Pod runs in, in case of Secrets and ConfigMaps it is "default"
-            vault.security.banzaicloud.io/vault-skip-verify: "true" # optional, skip TLS verification of the Vault server certificate
-            vault.security.banzaicloud.io/vault-path: "kubernetes" # optional, the Kubernetes Auth mount path in Vault the default value is "kubernetes"
-        spec:
-          serviceAccountName: vault
-          containers:
-          - name: alpine
-            image: alpine
-            command: ["sh", "-c", "echo $username && echo going to sleep... && sleep 10000"]
-            env:
-            - name: username
-              value: vault:secret/data/webapp/config#username
+      serviceAccountName: default
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        env:
+        - name: AWS_SECRET
+          value: vault:secret/data/webapp/config#AWS_SECRET
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf.template
+          subPath: nginx.conf.template
+        - name: startup-script
+          mountPath: /docker-entrypoint.sh
+          subPath: docker-entrypoint.sh
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-secret-config
+      - name: startup-script
+        configMap:
+          name: nginx-startup-script
+          defaultMode: 0755
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-nginx
+spec:
+  selector:
+    app.kubernetes.io/name: vault
+  ports:
+    - protocol: TCP
+      port: 8204
+      targetPort: 8080
+  type: LoadBalancer

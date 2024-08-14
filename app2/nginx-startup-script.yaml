@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-startup-script
+data:
+  docker-entrypoint.sh: |
+    #!/bin/sh
+    set -e
+    envsubst '$AWS_SECRET' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+    exec nginx -g 'daemon off;'
